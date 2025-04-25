@@ -1,0 +1,254 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2758
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Monaco;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red255\green255\blue255;\red34\green45\blue53;
+\red34\green45\blue53;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\cssrgb\c100000\c100000\c100000;\cssrgb\c17647\c23137\c27059;
+\cssrgb\c17647\c23137\c27059;}
+\margl1440\margr1440\vieww14840\viewh14620\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf2 \cb3 # Activate qiime2.\
+conda activate qiime2\
+\
+# This function creates a visualization to look at the sequence quality. \
+# It uses demux.qza to create demux.qzv.\
+# The visualization will include an interactive summary of sequence counts, read lengths, and quality socres.\
+\pard\pardeftab720\partightenfactor0
+\cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec4 qiime demux summarize \\\
+--i-data demux.qza \\\
+--o-visualization demux.qzv\
+\
+# The function of this code is to remove any contimation and it merges the forward and reverse reads.  # It uses demux.qza, rep-seqs.qza, and table.qza to create a stats.qza file.\
+# The file includes the polished version of the interactive quality plot.\
+qiime dada2 denoise-paired \\\
+--i-demultiplexed-seqs demux.qza \\\
+--p-trunc-len-f 240 \\\
+--p-trim-left-f 0 \\\
+--p-trunc-len-r 200 \\\
+--p-trim-left-r 0 \\\
+--o-representative-sequences rep-seqs.qza \\\
+--o-table table.qza \\\
+--o-denoising-stats stats.qza\
+\
+# The function of this code is to visualize the rep-seqs.qzv and table.qzv.\
+# It uses the table.qza and rep-seqs.qza files.\
+# The table.qzv file includes the amount of reads on each sample.\
+\pard\pardeftab720\partightenfactor0
+\cf2 qiime feature-table summarize \\\
+--i-table table.qza \\\
+--o-visualization table.qzv \\\
+--m-sample-metadata-file metadata.txt\
+qiime feature-table tabulate-seqs \\\
+--i-data rep-seqs.qza \\\
+--o-visualization rep-seqs.qzv\
+\
+# This function downloads the taxonmy data set and places it into a file called gg-13-8-99-515-896-nb-classifier.qza\
+wget \\\
+  -O "gg-13-8-99-515-806-nb-classifier.qza" \\\
+  "https://data.qiime2.org/classifiers/sklearn-1.4.2/greengenes/gg-13-8-99-515-806-nb-classifier.qza"\
+\
+# This funcitions assigns a taxonmy \cf2 \outl0\strokewidth0 to create a taxonomy.qza file. \
+# It uses the gg-13-8-99-515-896-nb-classifier.qza file. \cf2 \outl0\strokewidth0 \strokec4 \
+qiime feature-classifier classify-sklearn \\\
+--i-classifier gg-13-8-99-515-806-nb-classifier.qza \\\
+--i-reads rep-seqs.qza \\\
+--o-classification taxonomy.qza\
+\
+# This function creates a visualization of the taxonomy.gzv file.\
+# It uses the taxonomy.gza file. \
+# This file includes the taxonomic groups of each sample. \
+qiime metadata tabulate \\\
+--m-input-file taxonomy.qza \\\
+--o-visualization taxonomy.qzv\
+\
+\
+# This function creates a table-with-phyla-no-mitochondria-chlorplast.gza file \
+# It uses the table.qza and taxonomy.qza files. \
+qiime taxa filter-table \\\
+--i-table table.qza \\\
+--i-taxonomy taxonomy.qza \\\
+--p-include p__ \\\
+--p-exclude mitochondria,chloroplast \\\
+--o-filtered-table table-with-phyla-no-mitochondria-chloroplast.qza\
+\
+# This function creates a table-wth-phyla-no-mitochondria-chloroplats-archaea.qza file \
+# It uses the \cf2 \outl0\strokewidth0 table-with-phyla-no-mitochondria-chloroplast.qza and taxonomy.qza files. \cf2 \outl0\strokewidth0 \strokec4 \
+qiime taxa filter-table \\\
+--i-table table-with-phyla-no-mitochondria-chloroplast.qza \\\
+--i-taxonomy taxonomy.qza \\\
+--p-exclude "k__Archaea" \\\
+--o-filtered-table table-with-phyla-no-mitochondria-chloroplasts-archaea.qza\
+\
+# This function creates a table-with-phyla-no-mitochondria-chlroplasts-archaea-eukaryota.gza file \
+# It uses the \cf2 \outl0\strokewidth0 table-with-phyla-no-mitochondria-chloroplasts-archaea.qza and taxonomy.gza files. \cf2 \outl0\strokewidth0 \strokec4 \
+qiime taxa filter-table \\\
+--i-table table-with-phyla-no-mitochondria-chloroplasts-archaea.qza \\\
+--i-taxonomy taxonomy.qza \\\
+--p-exclude "k__Eukaryota" \\\
+--o-filtered-table table-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza\
+\
+# This function creates a \cf2 \outl0\strokewidth0  rep-seqs-with-phyla-no-mitochondria-chloroplast.qza \
+# It uses the rep-seqs.qza and taxonomy.qza files. \cf2 \outl0\strokewidth0 \strokec4 \
+qiime taxa filter-seqs \\\
+--i-sequences rep-seqs.qza \\\
+--i-taxonomy taxonomy.qza \\\
+--p-include p__ \\\
+--p-exclude mitochondria,chloroplast \\\
+--o-filtered-sequences rep-seqs-with-phyla-no-mitochondria-chloroplast.qza\
+\
+# This function creates a \cf2 \outl0\strokewidth0 rep-seqs-with-phyla-no-mitochondria-chloroplasts-archaea.qza \
+# It uses the rep-seqs-with-phyla-no-mitochondria-chloroplast.qza and taxonomy.qza files. \cf2 \outl0\strokewidth0 \strokec4 \
+qiime taxa filter-seqs \\\
+--i-sequences rep-seqs-with-phyla-no-mitochondria-chloroplast.qza \\\
+--i-taxonomy taxonomy.qza \\\
+--p-exclude "k__Archaea" \\\
+--o-filtered-sequences rep-seqs-with-phyla-no-mitochondria-chloroplasts-archaea.qza\
+\
+# This function creates a \cf2 \outl0\strokewidth0 rep-seqs-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza \
+# It uses the  rep-seqs-with-phyla-no-mitochondria-chloroplasts-archaea.qza and taxonomy.qza files  \cf2 \outl0\strokewidth0 \strokec4 \
+qiime taxa filter-seqs \\\
+--i-sequences rep-seqs-with-phyla-no-mitochondria-chloroplasts-archaea.qza \\\
+--i-taxonomy taxonomy.qza \\\
+--p-exclude "k__Eukaryota" \\\
+--o-filtered-sequences rep-seqs-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza\
+\
+# These functions rename the files so they have shorter names \
+mv table-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza filtered-table.qza\
+mv rep-seqs-with-phyla-no-mitochondria-chloroplasts-archaea-eukaryota.qza filtered-rep-seqs.qza\
+\
+# This function creates a visualation of taxa-bar-plots.qzv \
+# It uses the \cf2 \outl0\strokewidth0 filtered-table.qza,  taxonomy.qza, and metadata.txt files. \
+# This file incldues interactive bar plots that show different taxonomic levels of each sample.\cf2 \outl0\strokewidth0 \strokec4 \
+qiime taxa barplot \\\
+--i-table filtered-table.qza \\\
+--i-taxonomy taxonomy.qza \\\
+--m-metadata-file metadata.txt \\\
+--o-visualization taxa-bar-plots.qzv\
+\
+# This function creates a rooted-tree.qza file\
+# It uses the filtered-rep-seqs.qza, aligned-rep-seqs.qza, masked-aligned-rep-seqs.qza, and unrooted-tree.qza files. \
+qiime phylogeny align-to-tree-mafft-fasttree \\\
+--i-sequences filtered-rep-seqs.qza \\\
+--o-alignment aligned-rep-seqs.qza \\\
+--o-masked-alignment masked-aligned-rep-seqs.qza \\\
+--o-tree unrooted-tree.qza \\\
+--o-rooted-tree rooted-tree.qza\
+\
+\
+# This function creates a visualization for filtered-table.qzv file.\
+# It uses the filtered-table.qza and metadta.txt. \
+# This file includes a summary of feature table after filtering. \
+qiime feature-table summarize \\\
+--i-table filtered-table.qza \\\
+--o-visualization filtered-table.qzv \\\
+--m-sample-metadata-file metadata.txt\
+\
+# This code excludes the lowest sample reads to preserve as much data as possible. \
+# It uses the \cf2 \outl0\strokewidth0 phylogeny rooted-tree.qza, table filtered-table.qza , and metadata.txt filtes. \cf2 \outl0\strokewidth0 \strokec4 \
+qiime diversity core-metrics-phylogenetic --i-phylogeny rooted-tree.qza --i-table filtered-table.qza --p-sampling-depth xxxxx --m-metadata-file metadata.txt --output-dir diversity-metrics-results\
+\
+# This function creates a \cf2 \outl0\strokewidth0 diversity-metrics-results/observed-features-group-significance.qzv file for visualization.\
+# It uses the diversity-metrics-results/observed_features_vector.qza and metadata.txt files\
+# This file includes measeurments of the alpha divrsity between the groups.\cf2 \outl0\strokewidth0 \strokec4 \
+qiime diversity alpha-group-significance \\\
+--i-alpha-diversity diversity-metrics-results/observed_features_vector.qza \\\
+--m-metadata-file metadata.txt \\\
+--o-visualization diversity-metrics-results/observed-features-group-significance.qzv\
+\
+# This fucntion creates a \cf2 \outl0\strokewidth0 diversity-metrics-results/shannon-group-significance.qzv file for visualization \
+# This uses the diversity-metrics-results/shannon_vector.qza and metadata.txt files. \
+# This file inlcudes comparing Shannon diversity scores between the sample groups. \cf2 \outl0\strokewidth0 \strokec4 \
+qiime diversity alpha-group-significance \\\
+--i-alpha-diversity diversity-metrics-results/shannon_vector.qza \\\
+--m-metadata-file metadata.txt \\\
+--o-visualization diversity-metrics-results/shannon-group-significance.qzv\
+\
+# This Function visualizates the diversity-metrics-results/bray-curtis-population-signifigance.qzv file\
+# This uses the \cf2 \outl0\strokewidth0 diversity-metrics-results/bray_curtis_distance_matrix.qza and metadata.txt file. \
+# This file includes the pairwise comparions for the populaitno metrics, including p value. \cf2 \outl0\strokewidth0 \strokec4 \
+qiime diversity beta-group-significance \\\
+--i-distance-matrix diversity-metrics-results/bray_curtis_distance_matrix.qza \\\
+--m-metadata-file metadata.txt \\\
+--m-metadata-column population \\\
+--o-visualization diversity-metrics-results/bray-curtis-life-stage-significance.qzv \\\
+--p-pairwise\
+\
+\
+\pard\pardeftab720\partightenfactor0
+\cf2 \outl0\strokewidth0 # This Function visualizates the diversity-metrics-results/bray-curtis-sex-signifigance.qzv file\
+# This uses the diversity-metrics-results/bray_curtis_distance_matrix.qza and metadata.txt file. \
+# This file includes the pairwise comparions for the sex metrics, including p value. \
+qiime diversity beta-group-significance \\\
+--i-distance-matrix diversity-metrics-results/bray_curtis_distance_matrix.qza \\\
+--m-metadata-file metadata.txt \\\
+--m-metadata-column sex \\\
+--o-visualization diversity-metrics-results/bray-curtis-sex-significance.qzv \\\
+--p-pairwise\
+\pard\pardeftab720\partightenfactor0
+\cf2 \outl0\strokewidth0 \strokec4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \outl0\strokewidth0 \
+# This Function visualizes the diversity-metrics-results/bray-curtis-flock-signifigance.qzv file\
+# This uses the diversity-metrics-results/bray_curtis_distance_matrix.qza and metadata.txt file. \
+# This file includes the pairwise comparions for the flock metrics, including p value. \
+qiime diversity beta-group-significance \\\
+--i-distance-matrix diversity-metrics-results/bray_curtis_distance_matrix.qza \\\
+--m-metadata-file metadata.txt \\\
+--m-metadata-column flock \\\
+--o-visualization diversity-metrics-results/bray-curtis-flcok-significance.qzv \\\
+--p-pairwise\
+\pard\pardeftab720\partightenfactor0
+\cf2 \outl0\strokewidth0 \strokec4 \
+\
+# These function uses the ANCOMBC program to find if specific taxa are differentially abudant based on the meta data columns. \
+# It uses the filtered-table.qza and the metadata.txt files. \
+# This file uses the population column from the metadata to determine whether certain taxa are enriched in or lower in one conditon vs. another.\
+qiime composition ancombc \\\
+  --i-table filtered-table.qza \\\
+  --m-metadata-file metadata.txt \\\
+  --p-formula \'91population\'92 \\\
+  --o-differentials ancombc-site.qza\
+\
+qiime composition da-barplot \\\
+  --i-data ancombc-population.qza \\\
+  --p-significance-threshold 0.05 \\\
+  --o-visualization da-barplot-sex.qzv\
+\
+\
+\pard\pardeftab720\partightenfactor0
+\cf2 \outl0\strokewidth0 # These function uses the ANCOMBC program to find if specific taxa are differentially abudant based on the meta data columns. \
+# It uses the filtered-table.qza and the metadata.txt files. \
+# This file uses the sex column from the metadata to determine whether certain taxa are enriched in or lower in one conditon vs. another.\
+qiime composition ancombc \\\
+  --i-table filtered-table.qza \\\
+  --m-metadata-file metadata.txt \\\
+  --p-formula \'91sex\'92 \\\
+  --o-differentials ancombc-sex.qzv\
+\
+qiime composition da-barplot \\\
+  --i-data ancombc-sex.qza \\\
+  --p-significance-threshold 0.05 \\\
+  --o-visualization da-barplot-sex.qzv\
+\pard\pardeftab720\partightenfactor0
+\cf2 \outl0\strokewidth0 \strokec4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \outl0\strokewidth0 # These function uses the ANCOMBC program to find if specific taxa are differentially abudant based on the meta data columns. \
+# It uses the filtered-table.qza and the metadata.txt files. \
+# This file uses the flock column from the metadata to determine whether certain taxa are enriched in or lower in one conditon vs. another.\
+qiime composition ancombc \\\
+  --i-table filtered-table.qza \\\
+  --m-metadata-file metadata.txt \\\
+  --p-formula \'91flock\'92 \\\
+  --o-differentials ancombc-flock.qzv\
+\
+qiime composition da-barplot \\\
+  --i-data ancombc-flock.qza \\\
+  --p-significance-threshold 0.05 \\\
+  --o-visualization da-barplot-flock.qzv\cf2 \outl0\strokewidth0 \strokec4 \
+\pard\pardeftab720\partightenfactor0
+\cf2 \
+\
+\pard\pardeftab720\partightenfactor0
+\cf2 \
+}
